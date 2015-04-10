@@ -56,20 +56,21 @@ impl Field {
 	}
 	//fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(&'a usize,&'a usize)> {
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
-		let mut v: Vec<(usize, usize)> = Vec::new();
-		for i in -1..1 {
-			for j in -1..1 {
-				v.push(i,j);
+		let mut v: Vec<(&i16, &i16)> = Vec::new();
+		for i in r {
+			for j in r {
+				v.push( (&i , &j ) );
 			}
 		}
-
 		v.iter()
-			.filter( |pair| match pair {
-						&(&0,&0) => false,
-						&(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
+			.filter( |&pair| match pair {
+						(&0,&0) => false,
+						(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
+						//&(&0,&0) => false,
+						//&(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
 						_ => true
 						})
-			.map(|(a,b)| (
+			.map(|(&a,&b)| (
 			     (x as i16 + a) as usize
 				,(y as i16 + b) as usize)
 		).collect()
