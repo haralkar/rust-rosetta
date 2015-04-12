@@ -2,3 +2,5 @@
 build/
 build-tests/
 target/
+.idea/*
+rust-rosetta.iml

@@ -10,7 +10,7 @@ enum Cell {
 	Tree,
 	Burning,
 }
-type FieldType = VecMap<VecMap<Cell>>;
+type FieldType = VecMap<Cell>;
 type RowType = VecMap<Cell>;
 struct Field {
 	cell_: FieldType,
@@ -22,17 +22,8 @@ struct Field {
 }
 impl Field {
 	fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
-		fn populate_field(x:usize, width: usize, height: usize, mut field: FieldType) -> FieldType {
-			match (height, width) {
-			(0,_) => field,
-			(h,w) => {
-					field.insert(h-1, RowType::with_capacity(x));
-					populate_field(x, h-1,w, field)
-				}
-			}
-		}
 		Field {
-			cell_ : populate_field(x, x,y, FieldType::with_capacity(y)),
+			cell_ : FieldType::with_capacity(y*x),
 			p_: p,
 			f_: f,
 			x_: x,
@@ -41,16 +32,12 @@ impl Field {
 		}
 	}
 	pub fn set(&mut self, x: &usize, y: &usize, c: Cell) {
-		if let Some(ref mut r) = self.cell_.get_mut(y)
-		{
-			r.insert(*x,c);
-		}
+		self.cell_.insert( y*self.x_ + *x, c );
 	}
 	pub fn get(&mut self, x: &usize, y: &usize) -> &Cell {
-		if let Some(ref r) = self.cell_.get(y) {
-			if let Some(ref r) = r.get(x)  {
-				return r
-			}
+		let cell = *y * self.x_ + *x;
+		if let Some(ref r) = self.cell_.get( &cell)  {
+			return r
 		}
 		return &self.empty_
 	}
@@ -64,13 +51,13 @@ impl Field {
 		}
 		v.iter()
 			.filter( |&pair| match pair {
-						(&0,&0) => false,
-						(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
+						&(&0,&0) => false,
+						&(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
 						//&(&0,&0) => false,
 						//&(&a,&b) if ((x as i16) + a ) < 0 || ((y as i16) + b)  <0 => false,
 						_ => true
 						})
-			.map(|(&a,&b)| (
+			.map(|&(&a,&b)| (
 			     (x as i16 + a) as usize
 				,(y as i16 + b) as usize)
 		).collect()
