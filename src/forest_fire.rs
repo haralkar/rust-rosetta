@@ -41,7 +41,6 @@ impl Field {
 		}
 		return &self.empty_
 	}
-	//fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(&'a usize,&'a usize)> {
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
 		for i in r {
@@ -52,13 +51,25 @@ impl Field {
 		v.iter()
 			.filter( |&pair| match pair {
 						&(&0,&0) => false,
-							&(&a,&b) if a<0 || b < 0 => (( x as i16) + a ) >= 0 && ((y as i16) + b)  >= 0,
-							//&(&a,&b) => ( x  + a ) < self.x_ && (y + b)  < self.y_,
-						_ => true
-						})
-			.map(|&(&a,&b)| (
-			     (x as i16 + a) as usize
-				,(y as i16 + b) as usize)
+						&(&a,&b)  => {
+							let xa = x as i16 + a;
+							let yb = y as i16 + b;
+							let out_of_bounds =
+								xa < 0 ||
+								xa >= self.x_ as i16 ||
+								yb < 0 ||
+								yb >= self.y_ as i16;
+							//println!(".      {}: {} {} (from {} {} + {} {})",out_of_bounds, xa,yb, x,y, a,b);
+							!out_of_bounds
+						}
+					})
+			.map(|&(&a,&b)| ({
+					 let xa = (x as i16 + a) as usize;
+					 let yb = (y as i16 + b) as usize;
+					 //println!("M{} {}",xa,yb);
+					 (xa,yb)
+				 })
+
 		).collect()
 	}
 	/*pub fn has_burning_neighbour(self, x: usize, y: usize) -> bool {
@@ -85,19 +96,26 @@ fn neighbours() {
 	let f = Field::new(10,10, 0.05, 0.001);
 
 	let r = vec![-1,0,1];
-	let s = f. neighbours(5,5,&r);
-	let c = f. neighbours(0,0,&r);
+
+	let c = f. neighbours(5,5,&r);
 	for i in c.iter() {
 		let &(a,b) = i;
 		println!("stuff: {} {}",a,b)
 	}
+
 	assert_eq!(8, f. neighbours(5,5,&r).len());
+
 	assert_eq!(5, f.neighbours(0,2,&r).len());
 	assert_eq!(5, f.neighbours(0,1,&r).len());
 	assert_eq!(5, f.neighbours(1,0,&r).len());
 	assert_eq!(3, f.neighbours(0,0,&r).len());
-	assert_eq!(5, f.neighbours(9,2,&r).len());
-	//assert_eq!(3, f. neighbours(0,0,&r).len());
+
+	assert_eq!(3, f. neighbours(9,9,&r).len());
+	assert_eq!(3, f.neighbours(9,0,&r).len());
+	assert_eq!(3, f.neighbours(0,9,&r).len());
+
+	assert_eq!(5, f.neighbours(1,9,&r).len());
+	assert_eq!(5, f.neighbours(9,1,&r).len());
 
 }
 /*
