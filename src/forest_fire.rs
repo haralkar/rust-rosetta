@@ -48,19 +48,18 @@ impl Field {
 			}
 		}
 		v.iter()
-			.filter( |&pair| match pair {
-						&(&0,&0) => false,
-						&(&a,&b)  => {
+			.filter_map( |&pair| match pair {
+						(&0,&0) => None,
+						(&a,&b)  => {
 							let xa = x as i16 + a;
 							let yb = y as i16 + b;
 							let out_of_bounds =
 								xa < 0 || xa >= self.x_ as i16 ||
 								yb < 0 || yb >= self.y_ as i16;
-							!out_of_bounds
+							if (out_of_bounds) {None}
+							else {Some((xa as usize, yb as usize))}
 						}
-					})
-			.map(|&(&a,&b)| ( (x as i16 + a) as usize, (y as i16 + b) as usize )
-		).collect()
+					}).collect()
 	}
 	pub fn has_burning_neighbour(&self, x: usize, y: usize) -> bool {
 		let xs = vec![-1,0,1];
