@@ -11,7 +11,6 @@ enum Cell {
 	Burning,
 }
 type FieldType = VecMap<Cell>;
-type RowType = VecMap<Cell>;
 struct Field {
 	cell_: FieldType,
 	p_: f32,
@@ -55,30 +54,20 @@ impl Field {
 							let xa = x as i16 + a;
 							let yb = y as i16 + b;
 							let out_of_bounds =
-								xa < 0 ||
-								xa >= self.x_ as i16 ||
-								yb < 0 ||
-								yb >= self.y_ as i16;
-							//println!(".      {}: {} {} (from {} {} + {} {})",out_of_bounds, xa,yb, x,y, a,b);
+								xa < 0 || xa >= self.x_ as i16 ||
+								yb < 0 || yb >= self.y_ as i16;
 							!out_of_bounds
 						}
 					})
-			.map(|&(&a,&b)| ({
-					 let xa = (x as i16 + a) as usize;
-					 let yb = (y as i16 + b) as usize;
-					 //println!("M{} {}",xa,yb);
-					 (xa,yb)
-				 })
-
+			.map(|&(&a,&b)| ( (x as i16 + a) as usize, (y as i16 + b) as usize )
 		).collect()
 	}
 	pub fn has_burning_neighbour(&self, x: usize, y: usize) -> bool {
 		let xs = vec![-1,0,1];
 		self.neighbours(x,y,&xs).iter().any(|&(x,y)|{
 				match self.get(&x,&y) {
-				 &Cell::Burning => {println!("X {} {}", x,y); true}
-				 &Cell::Empty => {println!("  {} {}", x,y); false}
-				 &Cell::Tree => {println!(". {} {}", x,y); false}
+				 &Cell::Burning => true,
+				 _ => false
 				}
 			})
 	}
@@ -106,7 +95,7 @@ fn neighbours() {
 	let c = f. neighbours(5,5,&r);
 	for i in c.iter() {
 		let &(a,b) = i;
-		println!("stuff: {} {}",a,b)
+		//println!("stuff: {} {}",a,b)
 	}
 
 	assert_eq!(8, f. neighbours(5,5,&r).len());
