@@ -34,7 +34,7 @@ impl Field {
 	pub fn set(&mut self, x: &usize, y: &usize, c: Cell) {
 		self.cell_.insert( y*self.x_ + *x, c );
 	}
-	pub fn get(&mut self, x: &usize, y: &usize) -> &Cell {
+	pub fn get(&self, x: &usize, y: &usize) -> &Cell {
 		let cell = *y * self.x_ + *x;
 		if let Some(ref r) = self.cell_.get( &cell)  {
 			return r
@@ -72,10 +72,16 @@ impl Field {
 
 		).collect()
 	}
-	/*pub fn has_burning_neighbour(self, x: usize, y: usize) -> bool {
-		let xs = vec![&-1,&0,&1];
-		self.neighbours(x,y,&xs).iter().any(|&(&x,&y)| self.get(&x,&y) == &Cell::Burning)
-	}*/
+	pub fn has_burning_neighbour(&self, x: usize, y: usize) -> bool {
+		let xs = vec![-1,0,1];
+		self.neighbours(x,y,&xs).iter().any(|&(x,y)|{
+				match self.get(&x,&y) {
+				 &Cell::Burning => {println!("X {} {}", x,y); true}
+				 &Cell::Empty => {println!("  {} {}", x,y); false}
+				 &Cell::Tree => {println!(". {} {}", x,y); false}
+				}
+			})
+	}
 
 }
 #[cfg(test)]
@@ -118,14 +124,23 @@ fn neighbours() {
 	assert_eq!(5, f.neighbours(9,1,&r).len());
 
 }
-/*
+#[test]
+fn neighbour_isnt_burning() {
+	let f = Field::new(10,10, 0.05, 0.001);
+	for i in -1..1 {
+		for j in -1..1 {
+			assert_eq!(false, f.has_burning_neighbour(1+i, 2+j));
+		}
+	}
+}
 #[test]
 fn neighbour_is_burning() {
 	let mut f = Field::new(10,10, 0.05, 0.001);
 	f.set(&1,&2, Cell::Burning);
-	for i in -1..1 {
-		for j in -1..1 {
-			assert_eq!(!(i==0&&j==0), f.has_burning_neighbour(1+i, 2+j));
+	let r = vec![-1,0,1];
+	for (x,y) in f.neighbours(1,2,&r) {
+		if !f.has_burning_neighbour(x,y) {
+			assert!(false);
 		}
 	}
 }
