@@ -7,7 +7,7 @@ use std::cmp::PartialEq;
 use std::collections::VecMap;
 use rand::{random, Open01};
 
-#[derive(Debug,PartialEq,Eq)]//,PartialOrd,Ord,Clone)]
+#[derive(Debug,PartialEq,Eq,Clone)]//,PartialOrd,Ord)]
 enum Cell {
 	Empty,
 	Tree,
@@ -33,6 +33,20 @@ impl Field {
 			empty_: Cell::Empty,
 		}
 	}
+	fn populate(self, t: Cell, p: f32) -> Field {
+		let mut out = Field {
+			cell_ : FieldType::with_capacity(self.y_*self.x_),
+			p_: self.p_,
+			f_: self.f_,
+			x_: self.x_,
+			y_: self.y_,
+			empty_: Cell::Empty,
+		};
+		for (y,_) in  self.cell_.iter() {
+			out.cell_.insert(y, self.rand_cell(t.clone(),p));
+		}
+		out
+	}
 	pub fn set(&mut self, x: &usize, y: &usize, c: Cell) {
 		self.cell_.insert( y*self.x_ + *x, c );
 	}
@@ -42,6 +56,15 @@ impl Field {
 			return r
 		}
 		return &self.empty_
+	}
+	fn cells(&self) -> Vec<(usize,usize)> {
+		let mut v: Vec<(usize, usize)> = Vec::new();
+		for i in 0..self.x_ {
+			for j in 0..self.y_ {
+				v.push( (i, j) );
+			}
+		}
+		v
 	}
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
@@ -60,7 +83,9 @@ impl Field {
 								xa < 0 || xa >= self.x_ as i16 ||
 								yb < 0 || yb >= self.y_ as i16;
 							if (out_of_bounds) {None}
-							else {Some((xa as usize, yb as usize))}
+							else {
+								Some((xa as usize, yb as usize))
+							}
 						}
 					}).collect()
 	}
@@ -146,9 +171,20 @@ fn rand_1_always_does() {
 	let f = Field::new(10,10, 0.05, 0.001);
 	assert_eq!(Cell::Tree, f.rand_cell(Cell::Tree, 1 as f32));
 }
+#[test]
 fn rand_0_never_does() {
 	let f = Field::new(10,10, 0.05, 0.001);
 	assert_eq!(Cell::Empty, f.rand_cell(Cell::Tree, 0 as f32));
+}
+#[test]
+fn all_cells() {
+	let f = Field::new(3,3, 0.05, 0.001);
+	assert_eq!(9, f.cells().len());
+}
+#[test]
+fn populate_does() {
+	let f = Field::new(9,9, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
+	assert!(f.cells().iter().any(|&(x,y)|*f.get(&x,&y) != Cell::Tree));
 }
 // */
 }
