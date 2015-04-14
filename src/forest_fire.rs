@@ -22,6 +22,20 @@ struct Field {
 	y_: usize,
 	empty_: Cell,
 }
+trait Coord {
+	to_pair(z: usize) -> (usize,usize);
+	from_pair( (x: usize, y: usize) ) -> usize;
+}
+impl Coord for Field {
+	to_pair(z: usize) -> (usize,usize) {
+		let y = z/self.x_;
+		let x = z%self.x_;
+		(x,y)
+	}
+	from_pair( (x: usize, y: usize) ) -> usize {
+		y * self.x_ + x
+	}
+}
 impl Field {
 	fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
 		Field {
@@ -201,4 +215,11 @@ fn center_burns_all() {
 	assert!(f.step().cells().iter().any(|&(x,y)|*f.get(&x,&y) == Cell::Tree));
 }
 // */
+#[test]
+fn populate_does() {
+	let f = Field::new(10,10, 0.05, 0.001);
+	assert_eq(9, f.from_pair( (9,0) ));
+}
+
+
 }
