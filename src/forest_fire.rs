@@ -34,19 +34,26 @@ impl Field {
 		}
 	}
 	fn populate(self, t: Cell, p: f32) -> Field {
-		let mut out = Field {
-			cell_ : FieldType::with_capacity(self.y_*self.x_),
-			p_: self.p_,
-			f_: self.f_,
-			x_: self.x_,
-			y_: self.y_,
-			empty_: Cell::Empty,
-		};
-		for (y,_) in  self.cell_.iter() {
+		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
+		for (y,_) in self.cell_.iter() {
 			out.cell_.insert(y, self.rand_cell(t.clone(),p));
 		}
 		out
 	}
+	/*
+	fn step(self) -> Field {
+		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
+		for (y,c) in self.cell_.iter() {
+			out.cell_.insert(y,
+				match c {
+					&Cell::Tree if self.has_burning_neighbour() => Cell::Burning.clone(),
+					_ => c.clone()
+				}
+			);
+		}
+		out
+	}
+	// */
 	pub fn set(&mut self, x: &usize, y: &usize, c: Cell) {
 		self.cell_.insert( y*self.x_ + *x, c );
 	}
@@ -185,6 +192,13 @@ fn all_cells() {
 fn populate_does() {
 	let f = Field::new(9,9, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
 	assert!(f.cells().iter().any(|&(x,y)|*f.get(&x,&y) != Cell::Tree));
+}
+/*
+#[test]
+fn center_burns_all() {
+	let mut f = Field::new(3,3, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
+	f.set(&1,&1, Cell::Burning);
+	assert!(f.step().cells().iter().any(|&(x,y)|*f.get(&x,&y) == Cell::Tree));
 }
 // */
 }
