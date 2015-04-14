@@ -52,6 +52,7 @@ authors = [
 ]
 
 [dependencies]
+rand="*"
 [[bin]]
 # http://rosettacode.org/wiki/Four_bit_adder
 name = "forest_fire"

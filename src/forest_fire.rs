@@ -1,8 +1,11 @@
 #![feature(collections)]
 
+extern crate rand;
+
 use std::cmp::Eq;
 use std::cmp::PartialEq;
 use std::collections::VecMap;
+use rand::{random, Open01};
 
 #[derive(Debug,PartialEq,Eq)]//,PartialOrd,Ord,Clone)]
 enum Cell {
@@ -70,7 +73,13 @@ impl Field {
 				}
 			})
 	}
-
+	fn rand_cell(&self, c: Cell, p: f32) -> Cell
+	{
+		match  random::<Open01<f32>>() {
+			Open01(val) if val < p => c,
+			_=> Cell::Empty,
+		}
+	}
 }
 #[cfg(test)]
 mod test {
@@ -131,6 +140,15 @@ fn neighbour_is_burning() {
 			assert!(false);
 		}
 	}
+}
+#[test]
+fn rand_1_always_does() {
+	let f = Field::new(10,10, 0.05, 0.001);
+	assert_eq!(Cell::Tree, f.rand_cell(Cell::Tree, 1 as f32));
+}
+fn rand_0_never_does() {
+	let f = Field::new(10,10, 0.05, 0.001);
+	assert_eq!(Cell::Empty, f.rand_cell(Cell::Tree, 0 as f32));
 }
 // */
 }
