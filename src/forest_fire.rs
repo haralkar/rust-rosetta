@@ -2,8 +2,6 @@
 
 extern crate rand;
 
-use std::cmp::Eq;
-use std::cmp::PartialEq;
 use std::collections::VecMap;
 use rand::{random, Open01};
 
@@ -13,10 +11,10 @@ enum Cell {
 	Tree,
 	Burning,
 }
-trait tc {
+trait ToChar {
 	fn to_char(&self) -> char;
 }
-impl tc for Cell {
+impl ToChar for Cell {
 	fn to_char(&self) -> char {
 		match *self {
 			Cell::Empty => ' ',
@@ -25,6 +23,7 @@ impl tc for Cell {
 		}
 	}
 }
+
 type FieldType = VecMap<Cell>;
 struct Field {
 	cell_: FieldType,
@@ -36,7 +35,7 @@ struct Field {
 }
 trait Coord {
 	fn to_pair(&self, z: usize) -> (usize,usize);
-	fn from_pair(&self, x: usize, y: usize) -> usize;
+	fn from_pair(&self, x: &usize, y: &usize) -> usize;
 }
 
 impl Field {
@@ -65,18 +64,17 @@ impl Field {
 	fn populate(self, t: Cell, p: f32) -> Field {
 		let mut out = Field::empty(self.x_, self.y_, self.f_, self.p_);
 		for (y,_) in self.cell_.iter() {
-			print!(".");
 			out.cell_.insert(y, self.rand_cell(t.clone(),p));
 		}
 		out
 	}
-	fn step(&self) -> Field {
+	fn step(self) -> Field {
 		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
 		for (y,c) in self.cell_.iter() {
 			out.cell_.insert(y,
 				match (c, self.to_pair(y)) {
 					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning.clone(),
-					(&Cell::Tree, (_,_)) if self.auto_ignites() => Cell::Burning.clone(),
+					(&Cell::Tree,    _)  if self.auto_ignites() => Cell::Burning.clone(),
 					(&Cell::Empty,   _) => self.rand_cell(Cell::Tree, self.f_),
 					(&Cell::Burning, _) => self.rand_cell(Cell::Empty, self.f_),
 					_ => c.clone()
@@ -85,9 +83,10 @@ impl Field {
 		}
 		out
 	}
-	// */
-	pub fn set(&mut self, x: &usize, y: &usize, c: Cell) {
-		self.cell_.insert( y*self.x_ + *x, c );
+#[cfg(test)]
+	fn set(&mut self, x: &usize, y: &usize, c: Cell) {
+		let num = self.from_pair(x,y);
+		self.cell_.insert( num, c );
 	}
 	pub fn get(&self, x: &usize, y: &usize) -> &Cell {
 		let cell = *y * self.x_ + *x;
@@ -95,15 +94,6 @@ impl Field {
 			return r
 		}
 		return &self.empty_
-	}
-	fn cells(&self) -> Vec<(usize,usize)> {
-		let mut v: Vec<(usize, usize)> = Vec::new();
-		for i in 0..self.x_ {
-			for j in 0..self.y_ {
-				v.push( (i, j) );
-			}
-		}
-		v
 	}
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
@@ -166,7 +156,7 @@ impl Coord for Field {
 		let x = z%self.x_;
 		(x,y)
 	}
-	fn from_pair(&self, x: usize, y: usize ) -> usize {
+	fn from_pair(&self, x: &usize, y: &usize ) -> usize {
 		y * self.x_ + x
 	}
 }
@@ -187,7 +177,6 @@ mod test {
 use super::Field;
 use super::Cell;
 use super::Coord;
-use super::tc;
 
 #[test]
 fn field_functions() {
@@ -251,7 +240,7 @@ fn rand_0_never_does() {
 #[test]
 fn all_cells() {
 	let f = Field::new(3,3, 0.05, 0.001);
-	assert_eq!(9, f.cells().len());
+	assert_eq!(9, f.cell_.len());
 }
 #[test]
 fn populate_does() {
@@ -269,9 +258,9 @@ fn to_pair_calculates() {
 #[test]
 fn from_pair_calculates() {
 	let f = Field::new(10,10, 0.05, 0.001);
-	assert_eq!(9, f.from_pair( 9,0 ));
-	assert_eq!(54, f.from_pair( 4,5 ));
-	assert_eq!(99, f.from_pair( 9,9 ));
+	assert_eq!(9, f.from_pair( &9,&0 ));
+	assert_eq!(54, f.from_pair( &4,&5 ));
+	assert_eq!(99, f.from_pair( &9,&9 ));
 }
 #[test]
 fn center_burns_all() {
@@ -279,7 +268,7 @@ fn center_burns_all() {
 	f.set(&1,&1, Cell::Burning);
 	let n = f.step();
 	assert_eq!(9, n.cell_.len());
-	assert!(n.cell_.iter().all(|(c,f)| c==n.from_pair(1,1) || *f == Cell::Burning));
+	assert!(n.cell_.iter().all(|(c,f)| c==n.from_pair(&1,&1) || *f == Cell::Burning));
 }
 #[test]
 fn fire_burns_out() {
