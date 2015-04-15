@@ -23,19 +23,10 @@ struct Field {
 	empty_: Cell,
 }
 trait Coord {
-	to_pair(z: usize) -> (usize,usize);
-	from_pair( (x: usize, y: usize) ) -> usize;
+	fn to_pair(&self, z: usize) -> (usize,usize);
+	fn from_pair(&self, x: usize, y: usize) -> usize;
 }
-impl Coord for Field {
-	to_pair(z: usize) -> (usize,usize) {
-		let y = z/self.x_;
-		let x = z%self.x_;
-		(x,y)
-	}
-	from_pair( (x: usize, y: usize) ) -> usize {
-		y * self.x_ + x
-	}
-}
+
 impl Field {
 	fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
 		Field {
@@ -127,10 +118,21 @@ impl Field {
 		}
 	}
 }
+impl Coord for Field {
+	fn to_pair(&self, z: usize) -> (usize,usize) {
+		let y = z/self.x_;
+		let x = z%self.x_;
+		(x,y)
+	}
+	fn from_pair(&self, x: usize, y: usize ) -> usize {
+		y * self.x_ + x
+	}
+}
 #[cfg(test)]
 mod test {
 use super::Field;
 use super::Cell;
+use super::Coord;
 
 #[test]
 fn field_functions() {
@@ -216,9 +218,18 @@ fn center_burns_all() {
 }
 // */
 #[test]
-fn populate_does() {
+fn to_pair_calculates() {
 	let f = Field::new(10,10, 0.05, 0.001);
-	assert_eq(9, f.from_pair( (9,0) ));
+	assert_eq!( (9,0), f.to_pair(9));
+	assert_eq!( (5,4), f.to_pair(45));
+	assert_eq!( (9,9), f.to_pair(99));
+}
+#[test]
+fn from_pair_calculates() {
+	let f = Field::new(10,10, 0.05, 0.001);
+	assert_eq!(9, f.from_pair( 9,0 ));
+	assert_eq!(54, f.from_pair( 4,5 ));
+	assert_eq!(99, f.from_pair( 9,9 ));
 }
 
 
