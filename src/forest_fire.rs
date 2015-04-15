@@ -52,8 +52,8 @@ impl Field {
 			println!("Step");
 			out.cell_.insert(y,
 				match (c, self.to_pair(y)) {
-					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) =>
-						{println!("B");Cell::Burning.clone()}
+					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning.clone(),
+					(&Cell::Empty, (_,_)) => self.rand_cell(Cell::Tree, self.p_),
 					_ => {println!(".");c.clone()}
 				}
 			);
@@ -96,7 +96,7 @@ impl Field {
 							let out_of_bounds =
 								xa < 0 || xa >= self.x_ as i16 ||
 								yb < 0 || yb >= self.y_ as i16;
-							if (out_of_bounds) {None}
+							if out_of_bounds {None}
 							else {
 								Some((xa as usize, yb as usize))
 							}
@@ -149,12 +149,6 @@ fn neighbours() {
 	let f = Field::new(10,10, 0.05, 0.001);
 
 	let r = vec![-1,0,1];
-
-	let c = f. neighbours(5,5,&r);
-	for i in c.iter() {
-		let &(a,b) = i;
-		//println!("stuff: {} {}",a,b)
-	}
 
 	assert_eq!(8, f. neighbours(5,5,&r).len());
 
@@ -236,6 +230,11 @@ fn center_burns_all() {
 fn fire_burns_out() {
 	let f = Field::new(3,3, 0.05, 0.001).populate(Cell::Burning, 1 as f32).step();
 	assert!(f.cell_.iter().all(|(_,f)| *f == Cell::Empty));
+}
+#[test]
+fn empties_sprout_trees() {
+	let f = Field::new(3,3, 1.0, 0.0).populate(Cell::Empty, 1 as f32).step();
+	assert!(f.cell_.iter().all(|(_,f)| *f == Cell::Tree));
 }
 
 
