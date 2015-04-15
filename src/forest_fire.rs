@@ -45,14 +45,16 @@ impl Field {
 		}
 		out
 	}
-	/*
-	fn step(self) -> Field {
+	fn step(&self) -> Field {
 		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
+		println!("Stepping");
 		for (y,c) in self.cell_.iter() {
+			println!("Step");
 			out.cell_.insert(y,
-				match c {
-					&Cell::Tree if self.has_burning_neighbour() => Cell::Burning.clone(),
-					_ => c.clone()
+				match (c, self.to_pair(y)) {
+					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) =>
+						{println!("B");Cell::Burning.clone()}
+					_ => {println!(".");c.clone()}
 				}
 			);
 		}
@@ -209,14 +211,6 @@ fn populate_does() {
 	let f = Field::new(9,9, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
 	assert!(f.cells().iter().any(|&(x,y)|*f.get(&x,&y) != Cell::Tree));
 }
-/*
-#[test]
-fn center_burns_all() {
-	let mut f = Field::new(3,3, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
-	f.set(&1,&1, Cell::Burning);
-	assert!(f.step().cells().iter().any(|&(x,y)|*f.get(&x,&y) == Cell::Tree));
-}
-// */
 #[test]
 fn to_pair_calculates() {
 	let f = Field::new(10,10, 0.05, 0.001);
@@ -231,6 +225,14 @@ fn from_pair_calculates() {
 	assert_eq!(54, f.from_pair( 4,5 ));
 	assert_eq!(99, f.from_pair( 9,9 ));
 }
+#[test]
+fn center_burns_all() {
+	let mut f = Field::new(3,3, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
+	f.set(&1,&1, Cell::Burning);
+	let n = f.step();
+	assert!(n.cell_.iter().all(|(c,f)| c==n.from_pair(1,1) || *f == Cell::Burning));
+}
 
 
+// */
 }
