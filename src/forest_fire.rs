@@ -13,13 +13,13 @@ enum Cell {
 	Tree,
 	Burning,
 }
-trait ts {
+trait tc {
 	fn to_char(&self) -> char;
 }
-impl ts for Cell {
+impl tc for Cell {
 	fn to_char(&self) -> char {
 		match *self {
-			Cell::Empty => '.',
+			Cell::Empty => ' ',
 			Cell::Tree => '#',
 			Cell::Burning => 'X',
 		}
@@ -64,19 +64,15 @@ impl Field {
 	}
 	fn populate(self, t: Cell, p: f32) -> Field {
 		let mut out = Field::empty(self.x_, self.y_, self.f_, self.p_);
-		println!("populating");
 		for (y,_) in self.cell_.iter() {
 			print!(".");
 			out.cell_.insert(y, self.rand_cell(t.clone(),p));
 		}
-		println!("done");
 		out
 	}
 	fn step(&self) -> Field {
 		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
-		//println!("Stepping {}", self.cell_.len());
 		for (y,c) in self.cell_.iter() {
-			//println!("Step");
 			out.cell_.insert(y,
 				match (c, self.to_pair(y)) {
 					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning.clone(),
@@ -148,7 +144,6 @@ impl Field {
 	}
 	fn rand_cell(&self, c: Cell, p: f32) -> Cell
 	{
-	println!("prob: {} to {}", p, c.to_char());
 		match  random::<Open01<f32>>() {
 			Open01(val) if val < p => c,
 			_=> Cell::Empty,
@@ -156,9 +151,7 @@ impl Field {
 	}
 	fn to_string(&self) -> String {
 		let mut out = String::with_capacity((1+self.x_)*self.y_+2);
-		//println!("Tostring");
 		for (c,f) in self.cell_.iter() {
-			//println!("{}", f.to_char());
 			out.push( f.to_char());
 			if 0 == (1+c) % self.x_ {
 				out.push('\n');
@@ -178,6 +171,15 @@ impl Coord for Field {
 	}
 }
 
+#[cfg(not(test))]
+fn main() {
+	let mut field = Field::new(70,50, 0.1, 0.001).populate(Cell::Tree, 0.3);
+	for i in 1..200 {
+		println!("run {}\n{}", i, field.to_string());
+		field = field.step();
+		std::thread::sleep_ms(2000);
+	}
+}
 
 
 #[cfg(test)]
@@ -185,7 +187,7 @@ mod test {
 use super::Field;
 use super::Cell;
 use super::Coord;
-use super::ts;
+use super::tc;
 
 #[test]
 fn field_functions() {
@@ -274,11 +276,8 @@ fn from_pair_calculates() {
 #[test]
 fn center_burns_all() {
 	let mut f = Field::new(3,3, 0.05, 0.001).populate(Cell::Tree, 1 as f32);
-	//println!("size: {}", f.cell_.len());
 	f.set(&1,&1, Cell::Burning);
-	//println!("size: {}", f.cell_.len());
 	let n = f.step();
-	//println!("Nsize: {}", n.cell_.len());
 	assert_eq!(9, n.cell_.len());
 	assert!(n.cell_.iter().all(|(c,f)| c==n.from_pair(1,1) || *f == Cell::Burning));
 }
@@ -290,7 +289,6 @@ fn fire_burns_out() {
 #[test]
 fn empties_sprout_trees() {
 	let f = Field::new(3,3, 1.0, 0.0).populate(Cell::Empty, 1 as f32).step();
-	println!("Field ({}):\n{}", f.cell_.len(), f.to_string());
 	assert!(!f.cell_.iter().any(|(_,c)| *c == Cell::Empty));
 }
 #[test]
@@ -302,8 +300,8 @@ fn fire_starts_on_its_own() {
 fn to_string() {
 	let mut f = Field::new(3,3, 0.0, 0.0).populate(Cell::Tree, 1 as f32);
 	f.set( &0,&0, Cell::Burning);
-	let n= f.step();
-	assert_eq!(".X#\nXX#\n###\n", n.to_string());
+	let n = f.step();
+	assert_eq!(" X#\nXX#\n###\n", n.to_string());
 }
 
 
