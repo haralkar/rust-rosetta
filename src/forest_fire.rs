@@ -232,6 +232,11 @@ fn center_burns_all() {
 	let n = f.step();
 	assert!(n.cell_.iter().all(|(c,f)| c==n.from_pair(1,1) || *f == Cell::Burning));
 }
+#[test]
+fn fire_burns_out() {
+	let f = Field::new(3,3, 0.05, 0.001).populate(Cell::Burning, 1 as f32).step();
+	assert!(f.cell_.iter().all(|(_,f)| *f == Cell::Empty));
+}
 
 
 // */
