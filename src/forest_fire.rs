@@ -54,6 +54,15 @@ impl Field {
 			y_: y,
 		}
 	}
+	fn empty (x: usize, y: usize, f: f32, p: f32) -> Field {
+		Field {
+			cell_: FieldType::with_capacity(y*x),
+			p_: p,
+			f_: f,
+			x_: x,
+			y_: y,
+		}
+	}
 
 	fn populate(self, t: Cell, p: f32) -> Field {
 		Field {
@@ -65,7 +74,7 @@ impl Field {
 		}
 	}
 	fn step(self) -> Field {
-		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
+		let mut out = Field::empty(self.x_, self.y_, self.f_, self.p_);
 		for (y,c) in self.cell_.iter() {
 			out.cell_.insert(y,
 				match (c, self.to_pair(y)) {
@@ -157,8 +166,9 @@ impl Coord for Field {
 fn main() {
 	let mut field = Field::new(70,50, 0.1, 0.001).populate(Cell::Tree, 0.3);
 	for i in 1..200 {
-		field = field.step();
+		let nf = field.step();
 		println!("run {}\n{}", i, field.to_string());
+		field = nf;
 		std::thread::sleep_ms(500);
 	}
 }
