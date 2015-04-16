@@ -18,7 +18,7 @@ impl ToChar for Cell {
 	fn to_char(&self) -> char {
 		match *self {
 			Cell::Empty => ' ',
-			Cell::Tree => '#',
+			Cell::Tree => '|',
 			Cell::Burning => 'X',
 		}
 	}
@@ -31,7 +31,6 @@ struct Field {
 	f_: f32,
 	x_: usize,
 	y_: usize,
-	empty_: Cell,
 }
 trait Coord {
 	fn to_pair(&self, z: usize) -> (usize,usize);
@@ -53,7 +52,6 @@ impl Field {
 			f_: f,
 			x_: x,
 			y_: y,
-			empty_: Cell::Empty,
 		}
 	}
 	fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
@@ -93,7 +91,7 @@ impl Field {
 		if let Some(ref r) = self.cell_.get( &cell)  {
 			return r
 		}
-		return &self.empty_
+		panic!();
 	}
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
@@ -111,8 +109,9 @@ impl Field {
 							let out_of_bounds =
 								xa < 0 || xa >= self.x_ as i16 ||
 								yb < 0 || yb >= self.y_ as i16;
-							if out_of_bounds {None}
-							else {
+							if out_of_bounds {
+								None
+							} else {
 								Some((xa as usize, yb as usize))
 							}
 						}
@@ -120,12 +119,7 @@ impl Field {
 	}
 	pub fn has_burning_neighbour(&self, x: usize, y: usize) -> bool {
 		let xs = vec![-1,0,1];
-		self.neighbours(x,y,&xs).iter().any(|&(x,y)|{
-				match self.get(&x,&y) {
-				 &Cell::Burning => true,
-				 _ => false
-				}
-			})
+		self.neighbours(x,y,&xs).iter().any(|&(x,y)| self.get(&x,&y) == &Cell::Burning )
 	}
 	fn auto_ignites(&self) -> bool
 	{
@@ -165,9 +159,9 @@ impl Coord for Field {
 fn main() {
 	let mut field = Field::new(70,50, 0.1, 0.001).populate(Cell::Tree, 0.3);
 	for i in 1..200 {
-		println!("run {}\n{}", i, field.to_string());
 		field = field.step();
-		std::thread::sleep_ms(2000);
+		println!("run {}\n{}", i, field.to_string());
+		std::thread::sleep_ms(500);
 	}
 }
 
@@ -199,7 +193,7 @@ fn neighbours() {
 	assert_eq!(5, f.neighbours(1,0,&r).len());
 	assert_eq!(3, f.neighbours(0,0,&r).len());
 
-	assert_eq!(3, f. neighbours(9,9,&r).len());
+	assert_eq!(3, f.neighbours(9,9,&r).len());
 	assert_eq!(3, f.neighbours(9,0,&r).len());
 	assert_eq!(3, f.neighbours(0,9,&r).len());
 
@@ -290,9 +284,7 @@ fn to_string() {
 	let mut f = Field::new(3,3, 0.0, 0.0).populate(Cell::Tree, 1 as f32);
 	f.set( &0,&0, Cell::Burning);
 	let n = f.step();
-	assert_eq!(" X#\nXX#\n###\n", n.to_string());
+	assert_eq!(" X|\nXX|\n|||\n", n.to_string());
 }
 
-
-// */
 }
