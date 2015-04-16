@@ -32,10 +32,6 @@ struct Field {
 	x_: usize,
 	y_: usize,
 }
-trait Coord {
-	fn to_pair(&self, z: usize) -> (usize,usize);
-	fn from_pair(&self, x: &usize, y: &usize) -> usize;
-}
 
 impl Field {
 	fn empty (x: usize, y: usize, f: f32, p: f32) -> Field {
@@ -100,9 +96,16 @@ impl Field {
 		panic!();
 	}
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
-		fn bounded(v: i16, upper:usize) -> bool {
-			v >= 0 && v < upper as i16
+		fn bounded(v: i16, upper:usize) -> Option<usize> {
+			match v >= 0 && v < upper as i16  {
+				true => Some(v as usize),
+				false => None,
+			}
 		}
+		fn repos(i: usize, offset: i16) -> i16 {
+			i as i16 + offset
+		}
+
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
 		for i in r {
 			for j in r {
@@ -113,15 +116,9 @@ impl Field {
 			.filter_map( |&pair| match pair {
 						(&0,&0) => None,
 						(&a,&b)  => {
-							let xa = x as i16 + a;
-							let yb = y as i16 + b;
-							let valid =
-								bounded (xa, self.x_) &&
-								bounded (yb, self.y_);
-							if valid {
-								Some((xa as usize, yb as usize))
-							} else {
-								None
+							match (bounded(repos(x,a), self.x_), bounded(repos(y,b), self.y_)) {
+								(Some(x), Some(y)) => Some( (x,y) ),
+								_ => None,
 							}
 						}
 					}).collect()
@@ -152,8 +149,6 @@ impl Field {
 		}
 		out
 	}
-}
-impl Coord for Field {
 	fn to_pair(&self, z: usize) -> (usize,usize) {
 		let y = z/self.x_;
 		let x = z%self.x_;
@@ -179,7 +174,6 @@ fn main() {
 mod test {
 use super::Field;
 use super::Cell;
-use super::Coord;
 
 #[test]
 fn field_functions() {
