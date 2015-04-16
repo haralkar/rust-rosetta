@@ -38,26 +38,21 @@ trait Coord {
 }
 
 impl Field {
-	fn fill(s: usize, mut f: FieldType) -> FieldType {
-		f.insert(s, Cell::Empty);
-		match s {
-			0 => f,
-			s => Field::fill(s-1,f)
+	pub fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
+		fn fill(p: usize, mut f: FieldType) -> FieldType {
+			f.insert(p, Cell::Empty);
+			match p {
+				0 => f,
+				p => fill(p-1, f)
+			}
 		}
-	}
-	fn empty(x: usize, y: usize, f: f32, p: f32) -> Field {
 		Field {
-			cell_ : FieldType::with_capacity(y*x),
+			cell_: fill(x*y-1, FieldType::with_capacity(y*x)),
 			p_: p,
 			f_: f,
 			x_: x,
 			y_: y,
 		}
-	}
-	fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
-		let mut out = Field::empty(x,y,f,p);
-		out.cell_ = Field::fill(x*y-1, out.cell_);
-		out
 	}
 
 	fn populate(self, t: Cell, p: f32) -> Field {
@@ -77,7 +72,7 @@ impl Field {
 					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning.clone(),
 					(&Cell::Tree,    _)  if self.auto_ignites() => Cell::Burning.clone(),
 					(&Cell::Empty,   _) => self.rand_cell(Cell::Tree, self.f_),
-					(&Cell::Burning, _) => self.rand_cell(Cell::Empty, self.f_),
+					(&Cell::Burning, _) => self.rand_cell(Cell::Empty, self.p_),
 					_ => c.clone()
 				}
 			);
