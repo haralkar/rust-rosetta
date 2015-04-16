@@ -38,22 +38,6 @@ trait Coord {
 }
 
 impl Field {
-	pub fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
-		fn fill(p: usize, mut f: FieldType) -> FieldType {
-			f.insert(p, Cell::Empty);
-			match p {
-				0 => f,
-				p => fill(p-1, f)
-			}
-		}
-		Field {
-			cell_: fill(x*y-1, FieldType::with_capacity(y*x)),
-			p_: p,
-			f_: f,
-			x_: x,
-			y_: y,
-		}
-	}
 	fn empty (x: usize, y: usize, f: f32, p: f32) -> Field {
 		Field {
 			cell_: FieldType::with_capacity(y*x),
@@ -62,6 +46,19 @@ impl Field {
 			x_: x,
 			y_: y,
 		}
+	}
+
+	pub fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
+		fn fill(p: usize, mut f: FieldType) -> FieldType {
+			f.insert(p, Cell::Empty);
+			match p {
+				0 => f,
+				p => fill(p-1, f)
+			}
+		}
+		let mut f = Field::empty(x,y,f,p);
+		f.cell_ = fill(x*y-1, f.cell_);
+		f
 	}
 
 	fn populate(self, t: Cell, p: f32) -> Field {
@@ -88,7 +85,8 @@ impl Field {
 		}
 		out
 	}
-#[cfg(test)]
+
+	#[cfg(test)]
 	fn set(&mut self, x: &usize, y: &usize, c: Cell) {
 		let num = self.from_pair(x,y);
 		self.cell_.insert( num, c );
@@ -166,9 +164,8 @@ impl Coord for Field {
 fn main() {
 	let mut field = Field::new(70,50, 0.1, 0.001).populate(Cell::Tree, 0.3);
 	for i in 1..200 {
-		let nf = field.step();
+		field = field.step();
 		println!("run {}\n{}", i, field.to_string());
-		field = nf;
 		std::thread::sleep_ms(500);
 	}
 }
