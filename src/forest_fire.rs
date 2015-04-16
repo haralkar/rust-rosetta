@@ -75,11 +75,11 @@ impl Field {
 		for (y,c) in self.cell_.iter() {
 			out.cell_.insert(y,
 				match (c, self.to_pair(y)) {
-					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning.clone(),
-					(&Cell::Tree,    _)  if self.auto_ignites() => Cell::Burning.clone(),
+					(&Cell::Tree, (x,y)) if self.has_burning_neighbour(x,y) => Cell::Burning,
+					(&Cell::Tree,    _)  if self.auto_ignites() => Cell::Burning,
 					(&Cell::Empty,   _) => self.rand_cell(Cell::Tree, self.f_),
 					(&Cell::Burning, _) => self.rand_cell(Cell::Empty, self.p_),
-					_ => c.clone()
+					(c,              _) => c.clone()
 				}
 			);
 		}
@@ -96,9 +96,13 @@ impl Field {
 		if let Some(ref r) = self.cell_.get( &cell)  {
 			return r
 		}
+		println!("trying for {} {}", *x, *y);
 		panic!();
 	}
 	fn neighbours<'a>(&self, x: usize, y: usize, r: &'a Vec<i16>) -> Vec<(usize,usize)> {
+		fn bounded(v: i16, upper:usize) -> bool {
+			v >= 0 && v < upper as i16
+		}
 		let mut v: Vec<(&i16, &i16)> = Vec::new();
 		for i in r {
 			for j in r {
@@ -111,13 +115,13 @@ impl Field {
 						(&a,&b)  => {
 							let xa = x as i16 + a;
 							let yb = y as i16 + b;
-							let out_of_bounds =
-								xa < 0 || xa >= self.x_ as i16 ||
-								yb < 0 || yb >= self.y_ as i16;
-							if out_of_bounds {
-								None
-							} else {
+							let valid =
+								bounded (xa, self.x_) &&
+								bounded (yb, self.y_);
+							if valid {
 								Some((xa as usize, yb as usize))
+							} else {
+								None
 							}
 						}
 					}).collect()
