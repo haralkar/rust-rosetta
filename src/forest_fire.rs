@@ -59,12 +59,15 @@ impl Field {
 		out.cell_ = Field::fill(x*y-1, out.cell_);
 		out
 	}
+
 	fn populate(self, t: Cell, p: f32) -> Field {
-		let mut out = Field::empty(self.x_, self.y_, self.f_, self.p_);
-		for (y,_) in self.cell_.iter() {
-			out.cell_.insert(y, self.rand_cell(t.clone(),p));
+		Field {
+			cell_ : self.cell_.iter().map(|(key,_)| (key, self.rand_cell(t.clone(),p)) ).collect(),
+			p_: self.p_,
+			f_: self.f_,
+			x_: self.x_,
+			y_: self.y_,
 		}
-		out
 	}
 	fn step(self) -> Field {
 		let mut out = Field::new(self.x_, self.y_, self.f_, self.p_);
