@@ -34,27 +34,27 @@ struct Field {
 }
 
 impl Field {
-	fn empty (x: usize, y: usize, f: f32, p: f32) -> Field {
+	fn empty(x: usize, y: usize, f: f32, p: f32) -> Field {
 		Field {
 			cell_: FieldType::with_capacity(y*x),
-			p_: p,
 			f_: f,
+			p_: p,
 			x_: x,
 			y_: y,
 		}
 	}
 
 	pub fn new(x: usize, y: usize, f: f32, p: f32) -> Field {
-		fn fill(p: usize, mut f: FieldType) -> FieldType {
-			f.insert(p, Cell::Empty);
+		fn fill(p: usize, mut field: FieldType) -> FieldType {
+			field.insert(p, Cell::Empty);
 			match p {
-				0 => f,
-				p => fill(p-1, f)
+				0 => field,
+				p => fill(p-1, field)
 			}
 		}
-		let mut f = Field::empty(x,y,f,p);
-		f.cell_ = fill(x*y-1, f.cell_);
-		f
+		let mut out = Field::empty(x,y,f,p);
+		out.cell_ = fill(x*y-1, out.cell_);
+		out
 	}
 
 	fn populate(self, t: Cell, p: f32) -> Field {
